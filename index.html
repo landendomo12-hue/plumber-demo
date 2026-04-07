@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Missed Call Demo</title>
+<style>
+body { font-family: Arial; background: #f1f5f9; display:flex; justify-content:center; padding:20px;}
+.phone { width:320px; background:white; border-radius:30px; padding:15px; box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+.header { text-align:center; font-weight:bold; margin-bottom:10px;}
+.msg { margin:8px 0; padding:10px; border-radius:15px; max-width:80%;}
+.business { background:#e2e8f0; }
+.customer { background:#111; color:white; margin-left:auto;}
+button { width:100%; padding:12px; margin-top:10px; border:none; border-radius:10px; background:black; color:white;}
+</style>
+</head>
+<body>
+
+<div>
+<div class="phone" id="chat">
+<div class="header">Your Plumbing Company</div>
+</div>
+
+<button onclick="nextStep()">Next Step</button>
+<button onclick="reset()">Reset</button>
+</div>
+
+<script>
+let step = 0;
+const chat = document.getElementById("chat");
+
+function addMessage(text, type){
+  let div = document.createElement("div");
+  div.className = "msg " + type;
+  div.innerText = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function nextStep(){
+  if(step===0){
+    addMessage("Missed call from customer","system");
+    addMessage("Hey — this is Your Plumbing Company. Sorry we missed your call. What do you need help with?\\n1) Leak\\n2) Drain issue\\n3) Water heater\\n4) Other","business");
+  }
+  if(step===1){
+    addMessage("2","customer");
+  }
+  if(step===2){
+    addMessage("Got it — is this urgent?\\n1) Urgent\\n2) Can wait","business");
+  }
+  if(step===3){
+    addMessage("1","customer");
+  }
+  if(step===4){
+    addMessage("What’s your address and best number?","business");
+  }
+  if(step===5){
+    addMessage("145 Oak St, Canonsburg PA","customer");
+  }
+  if(step===6){
+    addMessage("Perfect — we’ll follow up shortly.","business");
+  }
+  step++;
+}
+
+function reset(){
+  step = 0;
+  chat.innerHTML = '<div class="header">Your Plumbing Company</div>';
+}
+</script>
+
+</body>
+</html>
