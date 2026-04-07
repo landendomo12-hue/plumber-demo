@@ -1,154 +1,279 @@
-import React, { useMemo, useState } from "react";
-import { MessageCircle, PhoneMissed, ChevronLeft, Info } from "lucide-react";
-
-export default function PlumberMissedCallDemoApp() {
-  const [step, setStep] = useState(0);
-
-  const businessName = "Bruno Plumbing & Heating";
-  const logoUrl = "https://www.brunoplumbingandheating.com/wp-content/uploads/2020/06/logo-1.png";
-
-  const allMessages = useMemo(
-    () => [
-      { sender: "system", text: "Missed call from customer" },
-      {
-        sender: "business",
-        text:
-          "Hey — this is Bruno Plumbing & Heating.\n\nSorry we missed your call.\n\nWhat do you need help with?\n\n1) Leak\n2) Drain issue\n3) Water heater\n4) Other",
-      },
-      { sender: "customer", text: "2" },
-      {
-        sender: "business",
-        text: "Got it — is this urgent or can it wait?\n\n1) Urgent\n2) Can wait",
-      },
-      { sender: "customer", text: "1" },
-      {
-        sender: "business",
-        text:
-          "Want to describe the issue a bit more?\n\nThis part is optional. Reply with details or press 0 to skip.",
-      },
-      { sender: "customer", text: "0" },
-      {
-        sender: "business",
-        text:
-          "No problem — we’ll handle it from here.\n\nWhat’s the service address and best number to reach you?",
-      },
-      {
-        sender: "customer",
-        text: "145 Oak Street, Canonsburg PA\n\n412-555-0184",
-      },
-      {
-        sender: "business",
-        text:
-          "Perfect — we’ll follow up shortly.\n\nThis makes sure your request doesn’t get missed while we’re out on jobs.",
-      },
-    ],
-    []
-  );
-
-  const visibleMessages = allMessages.slice(0, step + 1);
-  const canAdvance = step < allMessages.length;
-
-  const handleNext = () => {
-    if (step < allMessages.length) {
-      setStep(step + 1);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bruno Plumbing & Heating Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
     }
-  };
+    .wrap { width: 100%; max-width: 420px; }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+    .primary { background: #111; color: white; }
+    .secondary { background: white; color: #333; border: 1px solid #ddd; }
+    .primary:disabled { opacity: .45; cursor: not-allowed; }
+    .phone {
+      width: 100%;
+      border-radius: 38px;
+      border: 10px solid #000;
+      background: #000;
+      padding: 6px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.18);
+    }
+    .screen {
+      overflow: hidden;
+      border-radius: 30px;
+      background: white;
+    }
+    .top {
+      background: #fafafa;
+      padding: 14px 18px 12px;
+      border-bottom: 1px solid #eee;
+    }
+    .notch {
+      width: 96px;
+      height: 6px;
+      border-radius: 999px;
+      background: #cfcfcf;
+      margin: 0 auto 14px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .icon-btn {
+      color: #777;
+      font-size: 18px;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid #e5e5e5;
+      background: white;
+      flex-shrink: 0;
+    }
+    .header-text { min-width: 0; }
+    .name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .status {
+      font-size: 12px;
+      color: #10b981;
+      margin-top: 2px;
+    }
+    .chat {
+      height: 640px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      background: linear-gradient(180deg,#eef4ff 0%,#f8fbff 36%,#fff 100%);
+      padding: 18px 14px 26px;
+    }
+    .badge-wrap { display: flex; justify-content: center; margin-bottom: 14px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      background: #fff1f2;
+      color: #dc2626;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border: 1px solid #ffe4e6;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    .thread { display: flex; flex-direction: column; gap: 12px; padding-bottom: 12px; }
+    .center { display: flex; justify-content: center; }
+    .system {
+      display: inline-block;
+      font-size: 11px;
+      color: #666;
+      background: rgba(255,255,255,.85);
+      border: 1px solid #e8e8e8;
+      border-radius: 999px;
+      padding: 6px 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+    }
+    .row { display: flex; }
+    .left { justify-content: flex-start; }
+    .right { justify-content: flex-end; }
+    .bubble {
+      max-width: 82%;
+      white-space: pre-line;
+      font-size: 15px;
+      line-height: 1.65;
+      padding: 14px 16px;
+      border-radius: 22px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      word-break: break-word;
+    }
+    .bubble.business {
+      background: white;
+      color: #111;
+      border: 1px solid #ececec;
+      border-top-left-radius: 8px;
+    }
+    .bubble.customer {
+      background: #147efb;
+      color: white;
+      border-top-right-radius: 8px;
+    }
+    .bottom {
+      border-top: 1px solid #eee;
+      background: white;
+      padding: 12px 14px;
+    }
+    .input {
+      background: #f4f4f5;
+      border-radius: 999px;
+      padding: 13px 16px;
+      color: #a1a1aa;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="controls">
+      <button id="nextBtn" class="primary">Start Demo</button>
+      <button id="resetBtn" class="secondary">Reset</button>
+    </div>
 
-  const handleReset = () => setStep(0);
-
-  return (
-    <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="mb-4 flex items-center justify-center gap-3">
-          <button
-            onClick={handleNext}
-            disabled={!canAdvance}
-            className="rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white shadow disabled:opacity-40"
-          >
-            {step === 0 ? "Start Demo" : canAdvance ? "Next Step" : "Finished"}
-          </button>
-          <button
-            onClick={handleReset}
-            className="rounded-full border border-neutral-300 bg-white px-5 py-2.5 text-sm font-medium text-neutral-700 shadow-sm"
-          >
-            Reset
-          </button>
+    <div class="phone">
+      <div class="screen">
+        <div class="top">
+          <div class="notch"></div>
+          <div class="header">
+            <div class="header-left">
+              <div class="icon-btn">‹</div>
+              <img class="avatar" src="https://www.brunoplumbingandheating.com/wp-content/uploads/2020/06/logo-1.png" alt="Bruno logo" />
+              <div class="header-text">
+                <div class="name">Bruno Plumbing &amp; Heating</div>
+                <div class="status">Active now</div>
+              </div>
+            </div>
+            <div class="icon-btn">ⓘ</div>
+          </div>
         </div>
 
-        <div className="mx-auto w-full rounded-[38px] border-[10px] border-black bg-black p-1.5 shadow-2xl">
-          <div className="overflow-hidden rounded-[30px] bg-white">
-            <div className="bg-neutral-50 px-5 pt-3">
-              <div className="mx-auto mb-3 h-1.5 w-24 rounded-full bg-neutral-300" />
-              <div className="flex items-center justify-between pb-3">
-                <div className="flex items-center gap-3">
-                  <button className="rounded-full p-1 text-neutral-500">
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <img
-                    src={logoUrl}
-                    alt="Bruno Plumbing & Heating logo"
-                    className="h-10 w-10 rounded-full border border-neutral-200 bg-white object-cover"
-                  />
-                  <div>
-                    <div className="text-sm font-semibold text-neutral-900">{businessName}</div>
-                    <div className="flex items-center gap-1 text-xs text-emerald-600">
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      Active now
-                    </div>
-                  </div>
-                </div>
-                <button className="rounded-full p-1 text-neutral-500">
-                  <Info className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="h-[640px] bg-[linear-gradient(180deg,#eef4ff_0%,#f8fbff_36%,#ffffff_100%)] px-4 py-5">
-              <div className="mb-4 flex justify-center">
-                <div className="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 shadow-sm ring-1 ring-red-100">
-                  <PhoneMissed className="h-3.5 w-3.5" />
-                  Missed call captured
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {visibleMessages.map((msg, i) => {
-                  if (msg.sender === "system") {
-                    return (
-                      <div key={i} className="flex justify-center">
-                        <div className="rounded-full bg-white/80 px-3 py-1 text-[11px] font-medium text-neutral-500 shadow-sm ring-1 ring-neutral-200">
-                          {msg.text}
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  const isBusiness = msg.sender === "business";
-                  return (
-                    <div key={i} className={`flex ${isBusiness ? "justify-start" : "justify-end"}`}>
-                      <div
-                        className={`max-w-[82%] whitespace-pre-line rounded-[22px] px-4 py-3 text-[15px] leading-6 shadow-sm ${
-                          isBusiness
-                            ? "rounded-tl-[8px] bg-white text-neutral-900 ring-1 ring-neutral-200"
-                            : "rounded-tr-[8px] bg-[#147EFB] text-white"
-                        }`}
-                      >
-                        {msg.text}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="border-t border-neutral-200 bg-white px-4 py-3">
-              <div className="flex items-center gap-3 rounded-full bg-neutral-100 px-4 py-3 text-sm text-neutral-400">
-                <span>iMessage</span>
-              </div>
-            </div>
+        <div id="chat" class="chat">
+          <div class="badge-wrap">
+            <div class="badge">📞 Missed call captured</div>
           </div>
+          <div id="thread" class="thread"></div>
+        </div>
+
+        <div class="bottom">
+          <div class="input">iMessage</div>
         </div>
       </div>
     </div>
-  );
-}
+  </div>
+
+  <script>
+    const messages = [
+      { sender: 'system', text: 'Missed call from customer' },
+      { sender: 'business', text: 'Hey — this is Bruno Plumbing & Heating.\n\nSorry we missed your call.\n\nWhat do you need help with?\n\n1) Leak\n2) Drain issue\n3) Water heater\n4) Other' },
+      { sender: 'customer', text: '2' },
+      { sender: 'business', text: 'Got it — is this urgent or can it wait?\n\n1) Urgent\n2) Can wait' },
+      { sender: 'customer', text: '1' },
+      { sender: 'business', text: 'Want to describe the issue a bit more?\n\nThis part is optional. Reply with details or press 0 to skip.' },
+      { sender: 'customer', text: '0' },
+      { sender: 'business', text: 'No problem — we’ll handle it from here.\n\nWhat’s the service address and best number to reach you?' },
+      { sender: 'customer', text: '145 Oak Street, Canonsburg PA\n\n412-555-0184' },
+      { sender: 'business', text: 'Perfect — we’ll follow up shortly.\n\nThis makes sure your request doesn’t get missed while we’re out on jobs.' }
+    ];
+
+    let step = 0;
+    const thread = document.getElementById('thread');
+    const nextBtn = document.getElementById('nextBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const chat = document.getElementById('chat');
+
+    function render() {
+      thread.innerHTML = '';
+      const visible = messages.slice(0, step);
+
+      visible.forEach((msg) => {
+        if (msg.sender === 'system') {
+          const wrap = document.createElement('div');
+          wrap.className = 'center';
+          const el = document.createElement('div');
+          el.className = 'system';
+          el.textContent = msg.text;
+          wrap.appendChild(el);
+          thread.appendChild(wrap);
+          return;
+        }
+
+        const row = document.createElement('div');
+        row.className = 'row ' + (msg.sender === 'business' ? 'left' : 'right');
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble ' + msg.sender;
+        bubble.textContent = msg.text;
+        row.appendChild(bubble);
+        thread.appendChild(row);
+      });
+
+      chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+      nextBtn.textContent = step === 0 ? 'Start Demo' : step >= messages.length ? 'Finished' : 'Next Step';
+      nextBtn.disabled = step >= messages.length;
+    }
+
+    nextBtn.addEventListener('click', () => {
+      if (step < messages.length) {
+        step += 1;
+        render();
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      step = 0;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
